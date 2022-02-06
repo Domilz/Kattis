@@ -10,25 +10,42 @@
 #include <iomanip>
 
 
-void findEndingParentheses(int index, std::string &line, std::vector<std::pair<int, int>> &parentheses, int operatorsSize) {
+void findEndingParentheses(int index, std::string &line, std::vector<std::pair<int, int>> &parentheses, int operatorsSize, char previous) {
     int j = index + 1;
     int endingOperator = operatorsSize;
     int wait = 0;
+    char prev = previous;
     while (1) {
         if (line[j] == ')') {
             if (wait == 0) {
+				if (prev == '+' || prev == '*' || prev == '/' || prev == '-')
+					endingOperator--;
                 break;              
             }
             else {
                 wait--;
             }
         }
-        if (line[j] == '*' || line[j] == '/' || line[j] == '+' || line[j] == '-') {
-            endingOperator++;
-        }
-        if (line[j] == '(') {
+        else if (line[j] == '(') {
             wait++;
         }
+        else if (line[j] != ' ') {
+			if (line[j] == '*' || line[j] == '/' || line[j] == '+') {
+				prev = line[j];
+				endingOperator++;
+			}
+			else if (line[j] == '-') {
+				if (prev == '+' || prev == '*' || prev == '/' || prev == '-') {
+				}
+				else {
+					endingOperator++;
+					prev = '-';
+				}
+			}
+			else if (line[j] >= '0' && line[j] <= '9') {
+				prev = line[j];
+			}
+		}
         j++;
     }
     parentheses.push_back({operatorsSize+1, endingOperator+1});
@@ -83,11 +100,42 @@ void run() {
         std::vector<double> elements;
         int index = 0;
         bool flag = false;
+        bool operatorFlag = false;
+        char prev = '0';
         if (line[0] == '-') {
             index = 1;
             flag = true;
+			int h = 1;
+			while (1) {
+				if (line[h] == '(') {
+					int g = h;
+					flag = false;
+					while (1) {
+						g++;
+						if (line[g] == '-') {
+							flag = true;
+							break;
+						}
+						else if (line[g] == ' ') {
+							continue;
+						}
+						else {
+							break;
+						}
+					}
+					prev = '-';
+					operators.push_back('-');
+					elements.push_back(0);
+					break;
+				}
+				else if (line[h] == ' ') {
+					h++;
+				}
+				else {
+					break;
+				}
+			}
         }
-        char prev;
         for (int i = index; i < (int) line.length(); i++) {
             if (line[i] != ' ' && line[i] != ')') {
                 std::string element = "";
@@ -100,17 +148,26 @@ void run() {
                         flag = true;
                     }
                     else {
+						prev = '-';
                         operators.push_back(line[i]);
                     }
                 }
                 else if (line[i] == '(') {
-                    findEndingParentheses(i, line, parentheses, (int) operators.size()-1);
+					if (!operatorFlag) {
+						findEndingParentheses(i, line, parentheses, (int) operators.size()-1, prev);						
+					}
+					else {
+						findEndingParentheses(i, line, parentheses, (int) operators.size()-2, prev);
+					}
                 }
                 else {
-					prev = 'n';
+					prev = line[i];
                     while (line[i] >= '0' && line[i] <= '9') {
                         element += line[i];
                         i++;
+                        if (i >= (int) line.length()) {
+							break;
+						}
                     }
                     i--;
                     double elementToPush = std::stod(element);
