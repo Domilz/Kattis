@@ -11,8 +11,8 @@
 void run() {
     double x;
     std::cin >> x;
-    double sum = std::round((x * 5280 / 4854) * 1000);
-    std::cout << sum;
+    int output = (x * 5280 / 4854 * 1000) + 0.5;
+    std::cout << output;
 }
 
  
